@@ -35,6 +35,7 @@ public class EventControllerTests {
                 .beginEnrollmentDateTime(LocalDateTime.of(2021, 2, 22, 21, 11))
                 .closeEnrollmentDateTime(LocalDateTime.of(2021, 2, 23, 21, 11))
                 .beginEventDateTime(LocalDateTime.of(2021, 2, 23, 21, 11))
+                .endEventDateTime(LocalDateTime.of(2021, 2, 23, 21, 11))
                 .basePrice(100)
                 .maxPrice(200)
                 .limitOfEnrollment(100)
@@ -78,6 +79,16 @@ public class EventControllerTests {
                 .accept(MediaTypes.HAL_JSON)
                 .content(objectMapper.writeValueAsString(event)))
                 .andDo(print())
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void create_Bad_Request_Empty_Input() throws Exception {
+        EventDto eventDto = EventDto.builder().build();
+
+        this.mockMvc.perform(post("/api/events")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(this.objectMapper.writeValueAsString(eventDto)))
                 .andExpect(status().isBadRequest());
     }
 
