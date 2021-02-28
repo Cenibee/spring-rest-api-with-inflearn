@@ -64,6 +64,7 @@ public class EventController {
 
     private ResponseEntity<?> errorResponseEntity(Errors errors) {
         return ResponseEntity.badRequest().body(
-                CollectionModel.of(ErrorDto.collectionOf(errors)));
+                CollectionModel.of(ErrorDto.collectionOf(errors),
+                        linkTo(methodOn(IndexController.class).index()).withRel("index")));
     }
 }

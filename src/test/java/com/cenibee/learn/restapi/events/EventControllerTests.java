@@ -194,7 +194,8 @@ public class EventControllerTests {
                 .andDo(print())
                 .andExpect(jsonPath("_embedded.errorDtoList[0].objectName").exists())
                 .andExpect(jsonPath("_embedded.errorDtoList[0].defaultMessage").exists())
-                .andExpect(jsonPath("_embedded.errorDtoList[0].code").exists());
+                .andExpect(jsonPath("_embedded.errorDtoList[0].code").exists())
+                .andExpect(jsonPath("_links.index").exists());
     }
 
 }
