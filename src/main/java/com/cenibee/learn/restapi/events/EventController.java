@@ -1,7 +1,11 @@
 package com.cenibee.learn.restapi.events;
 
+import com.cenibee.learn.restapi.common.ErrorDto;
+import com.cenibee.learn.restapi.index.Index.IndexController;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +19,7 @@ import javax.validation.Valid;
 import java.net.URI;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @Controller
 @RequestMapping(value = "/api/events", produces = MediaTypes.HAL_JSON_VALUE)
@@ -36,12 +41,12 @@ public class EventController {
     @PostMapping
     public ResponseEntity<?> createEvent(@RequestBody @Valid EventDto eventDto, Errors errors) {
         if (errors.hasErrors()) {
-            return ResponseEntity.badRequest().body(errors);
+            return errorResponseEntity(errors);
         }
 
         eventValidator.validate(eventDto, errors);
         if (errors.hasErrors()) {
-            return ResponseEntity.badRequest().body(errors);
+            return errorResponseEntity(errors);
         }
 
         Event event = modelMapper.map(eventDto, Event.class);
@@ -57,4 +62,8 @@ public class EventController {
         );
     }
 
+    private ResponseEntity<?> errorResponseEntity(Errors errors) {
+        return ResponseEntity.badRequest().body(
+                CollectionModel.of(ErrorDto.collectionOf(errors)));
+    }
 }
