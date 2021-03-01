@@ -4,13 +4,17 @@ import com.cenibee.learn.restapi.common.ErrorDto;
 import com.cenibee.learn.restapi.index.Index.IndexController;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.Errors;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -60,6 +64,19 @@ public class EventController {
                 .add(selfLinkBuilder.withRel("update-event"))
                 .add(linkTo(EventController.class).withRel("query-events"))
         );
+    }
+
+    @GetMapping
+    public ResponseEntity<?> queryEvents(Pageable pageable, PagedResourcesAssembler<Event> assembler) {
+        var pagedResources = assembler.toModel(this.eventRepository.findAll(pageable), event ->
+                EntityModel.of(event).add(
+                        linkTo(EventController.class).slash(event.getId()).withSelfRel()
+                ));
+        pagedResources.add(
+                // TODO 문서화한 URL 은 어떻게 테스트해야할까?
+                Link.of("/docs/index.html#resources-events-list").withRel("profile")
+        );
+        return ResponseEntity.ok(pagedResources);
     }
 
     private ResponseEntity<?> errorResponseEntity(Errors errors) {
