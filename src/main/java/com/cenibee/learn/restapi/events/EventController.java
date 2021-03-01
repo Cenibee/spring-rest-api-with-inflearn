@@ -10,17 +10,14 @@ import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
-import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.Errors;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.net.URI;
+
+import java.util.Optional;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
@@ -69,6 +66,19 @@ public class EventController {
                 // TODO 문서화한 URL 은 어떻게 테스트해야할까?
                 .add(Link.of("/docs/index.html#resources-events-list").withRel("profile"))
         );
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getEvent(@PathVariable Integer id) {
+        Optional<Event> eventOptional = this.eventRepository.findById(id);
+        if (eventOptional.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        } else {
+            return ResponseEntity.ok(eventModel(eventOptional.get())
+                    // TODO 문서화한 URL 은 어떻게 테스트해야할까?
+                    .add(Link.of("/docs/index.html#resources-events-get").withRel("profile"))
+            );
+        }
     }
 
     private ResponseEntity<?> errorResponseEntity(Errors errors) {
