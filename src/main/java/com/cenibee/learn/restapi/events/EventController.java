@@ -57,26 +57,18 @@ public class EventController {
         event.update();
         Event newEvent = this.eventRepository.save(event);
 
-        WebMvcLinkBuilder selfLinkBuilder = linkTo(EventController.class).slash(newEvent.getId());
-        URI createdUri = selfLinkBuilder.toUri();
-        return ResponseEntity.created(createdUri).body(EntityModel.of(event)
-                .add(selfLinkBuilder.withSelfRel())
-                .add(selfLinkBuilder.withRel("update-event"))
-                .add(linkTo(EventController.class).withRel("query-events"))
-        );
+        return ResponseEntity
+                .created(linkTo(EventController.class).slash(newEvent.getId()).toUri())
+                .body(eventModel(event));
     }
 
     @GetMapping
     public ResponseEntity<?> queryEvents(Pageable pageable, PagedResourcesAssembler<Event> assembler) {
-        var pagedResources = assembler.toModel(this.eventRepository.findAll(pageable), event ->
-                EntityModel.of(event).add(
-                        linkTo(EventController.class).slash(event.getId()).withSelfRel()
-                ));
-        pagedResources.add(
+        return ResponseEntity.ok(assembler
+                .toModel(this.eventRepository.findAll(pageable), this::eventModel)
                 // TODO 문서화한 URL 은 어떻게 테스트해야할까?
-                Link.of("/docs/index.html#resources-events-list").withRel("profile")
+                .add(Link.of("/docs/index.html#resources-events-list").withRel("profile"))
         );
-        return ResponseEntity.ok(pagedResources);
     }
 
     private ResponseEntity<?> errorResponseEntity(Errors errors) {
@@ -84,4 +76,12 @@ public class EventController {
                 CollectionModel.of(ErrorDto.collectionOf(errors),
                         linkTo(methodOn(IndexController.class).index()).withRel("index")));
     }
+
+    private EntityModel<? extends Event> eventModel(Event event) {
+        return EntityModel.of(event,
+                linkTo(EventController.class).slash(event.getId()).withSelfRel(),
+                linkTo(EventController.class).slash(event.getId()).withRel("update-event"),
+                linkTo(EventController.class).withRel("query-events"));
+    }
+
 }
