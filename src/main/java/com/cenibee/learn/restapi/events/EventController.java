@@ -80,6 +80,17 @@ public class EventController {
             );
         }
     }
+    @PatchMapping
+    public ResponseEntity<?> patchEvent(@RequestBody Event event) {
+        if (this.eventRepository.findById(event.getId()).isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        eventRepository.save(event);
+
+        return ResponseEntity.ok(eventModel(this.eventRepository.save(event))
+                .add(Link.of("/docs/index.html#resources-events-update").withRel("profile")));
+    }
 
     private ResponseEntity<?> errorResponseEntity(Errors errors) {
         return ResponseEntity.badRequest().body(

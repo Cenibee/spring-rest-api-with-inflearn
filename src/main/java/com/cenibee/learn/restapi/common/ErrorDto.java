@@ -23,6 +23,10 @@ public class ErrorDto {
     public static Collection<ErrorDto> collectionOf(Errors errors) {
         LinkedList<ErrorDto> list = new LinkedList<>();
 
+        if (errors == null) {
+            return list;
+        }
+
         errors.getFieldErrors().forEach(fieldError ->
             list.add(ErrorDto.builder()
                     .field(fieldError.getField())

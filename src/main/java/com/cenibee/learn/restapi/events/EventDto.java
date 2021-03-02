@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor @AllArgsConstructor
 public class EventDto {
 
+    private Integer id;
     @NotEmpty
     private String name;
     @NotEmpty

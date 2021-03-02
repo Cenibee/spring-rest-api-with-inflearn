@@ -28,8 +28,10 @@ import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.li
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.put;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
 import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -101,6 +103,7 @@ public class EventControllerTests {
                                 headerWithName(HttpHeaders.CONTENT_TYPE).description("content type header")
                         ),
                         requestFields(
+                                fieldWithPath("id").description("identifier of new event"),
                                 fieldWithPath("name").description("Name of new event"),
                                 fieldWithPath("description").description("description of new event"),
                                 fieldWithPath("beginEnrollmentDateTime").description("data time of begin of new event enroll"),
@@ -207,7 +210,7 @@ public class EventControllerTests {
     @DisplayName("30 개의 이벤트를 10개씩 두번째 페이지 조회하기")
     void queryEvents() throws Exception {
         // Given
-        IntStream.range(0, 30).forEach(this::generateEvent);
+        IntStream.range(0, 30).forEach(this::generateValidEvent);
 
         // When
         this.mockMvc.perform(get("/api/events")
@@ -230,7 +233,7 @@ public class EventControllerTests {
     @DisplayName("기존의 이벤트를 하나 조회하기")
     void getEvent() throws Exception {
         // Given
-        Event event = this.generateEvent(100);
+        Event event = this.generateValidEvent(100);
 
         // When
         this.mockMvc.perform(get("/api/events/{id}", event.getId()))
@@ -252,13 +255,61 @@ public class EventControllerTests {
         ;
     }
 
-    private Event generateEvent(int i) {
+    private Event generateValidEvent(int i) {
         Event event = Event.builder()
-                .name("event " + i)
-                .description("test event")
+                .name("Spring")
+                .description("REST API Development")
+                .beginEnrollmentDateTime(LocalDateTime.of(2021, 2, 22, 21, 11))
+                .closeEnrollmentDateTime(LocalDateTime.of(2021, 2, 23, 21, 11))
+                .beginEventDateTime(LocalDateTime.of(2021, 2, 23, 21, 11))
+                .endEventDateTime(LocalDateTime.of(2021, 2, 23, 21, 11))
+                .basePrice(100)
+                .maxPrice(200)
+                .limitOfEnrollment(100)
+                .location("강남역 스타텁 팩토리")
                 .build();
 
         return this.eventRepository.save(event);
+    }
+
+    @Test
+    @DisplayName("기존의 이벤트를 하나 수정하기")
+    void updateEvent() throws Exception {
+        // Given
+        Event event = this.generateValidEvent(100);
+        event.setName("updateEvent");
+
+        this.mockMvc.perform(patch("/api/events")
+                        .content(objectMapper.writeValueAsString(event))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaTypes.HAL_JSON)
+                )
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("name").value("updateEvent"))
+                .andExpect(jsonPath("id").exists())
+                .andExpect(jsonPath("_links.self").exists())
+                .andExpect(jsonPath("_links.profile").exists())
+                .andDo(document("update-an-event"))
+        ;
+    }
+
+    @Test
+    @DisplayName("없는 이벤트를 업데이트했을 때 404 응답 받기")
+    void updateEvent404() throws Exception {
+        Event event = generateValidEvent(3);
+        event.setId(100);
+        event.setName("updateEvent");
+
+        // When & Then
+        this.mockMvc.perform(patch("/api/events")
+                        .content(objectMapper.writeValueAsString(event))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaTypes.HAL_JSON)
+                )
+                .andDo(print())
+                .andExpect(status().isNotFound())
+        ;
     }
 
 }
