@@ -80,15 +80,30 @@ public class EventController {
             );
         }
     }
-    @PatchMapping
-    public ResponseEntity<?> patchEvent(@RequestBody Event event) {
-        if (this.eventRepository.findById(event.getId()).isEmpty()) {
+    @PutMapping("/{id}")
+    public ResponseEntity<?> patchEvent(@PathVariable Integer id,
+                                        @RequestBody @Valid EventDto eventDto,
+                                        Errors errors) {
+        Optional<Event> optionalEvent = this.eventRepository.findById(id);
+        if (optionalEvent.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
-        eventRepository.save(event);
+        if (errors.hasErrors()) {
+            return errorResponseEntity(errors);
+        }
 
-        return ResponseEntity.ok(eventModel(this.eventRepository.save(event))
+        this.eventValidator.validate(eventDto, errors);
+
+        if (errors.hasErrors()) {
+            return errorResponseEntity(errors);
+        }
+
+        Event existingEvent = optionalEvent.get();
+        this.modelMapper.map(eventDto, existingEvent);
+
+        return ResponseEntity.ok(eventModel(this.eventRepository.save(existingEvent))
+                // TODO 문서화한 URL 은 어떻게 테스트해야할까?
                 .add(Link.of("/docs/index.html#resources-events-update").withRel("profile")));
     }
 

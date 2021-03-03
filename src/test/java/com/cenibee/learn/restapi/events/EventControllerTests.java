@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -47,6 +48,9 @@ public class EventControllerTests {
 
     @Autowired
     EventRepository eventRepository;
+
+    @Autowired
+    ModelMapper modelMapper;
 
     private MockMvc mockMvc;
 
@@ -103,7 +107,6 @@ public class EventControllerTests {
                                 headerWithName(HttpHeaders.CONTENT_TYPE).description("content type header")
                         ),
                         requestFields(
-                                fieldWithPath("id").description("identifier of new event"),
                                 fieldWithPath("name").description("Name of new event"),
                                 fieldWithPath("description").description("description of new event"),
                                 fieldWithPath("beginEnrollmentDateTime").description("data time of begin of new event enroll"),
@@ -225,6 +228,7 @@ public class EventControllerTests {
                 .andExpect(jsonPath("_embedded.eventList[0]._links.self.href").exists())
                 .andExpect(jsonPath("_links.self.href").exists())
                 .andExpect(jsonPath("_links.profile.href").exists())
+                // TODO 문서화 구현
                 .andDo(document("query-events"))
         ;
     }
@@ -242,6 +246,7 @@ public class EventControllerTests {
                 .andExpect(jsonPath("id").exists())
                 .andExpect(jsonPath("_links.self").exists())
                 .andExpect(jsonPath("_links.profile").exists())
+                // TODO 문서화 구현
                 .andDo(document("get-an-event"))
         ;
     }
@@ -273,37 +278,84 @@ public class EventControllerTests {
     }
 
     @Test
-    @DisplayName("기존의 이벤트를 하나 수정하기")
+    @DisplayName("이벤트를 정상적으로 수정하기")
     void updateEvent() throws Exception {
         // Given
         Event event = this.generateValidEvent(100);
-        event.setName("updateEvent");
+        EventDto eventDto = this.modelMapper.map(event, EventDto.class);
 
-        this.mockMvc.perform(patch("/api/events")
-                        .content(objectMapper.writeValueAsString(event))
+        String eventName = "updateEvent";
+        eventDto.setName(eventName);
+
+        // When & Then
+        this.mockMvc.perform(put("/api/events/{id}", event.getId())
+                        .content(objectMapper.writeValueAsString(eventDto))
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaTypes.HAL_JSON)
                 )
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("name").value("updateEvent"))
+                .andExpect(jsonPath("name").value(eventName))
                 .andExpect(jsonPath("id").exists())
                 .andExpect(jsonPath("_links.self").exists())
                 .andExpect(jsonPath("_links.profile").exists())
+                // TODO 문서화 구현
                 .andDo(document("update-an-event"))
+        ;
+    }
+    
+    @Test
+    @DisplayName("입력값이 비어있는 경우에 이벤트 수정 실패")
+    void updateEvent400empty() throws Exception {
+        // Given
+        Event event = this.generateValidEvent(100);
+        EventDto eventDto = new EventDto();
+
+        String eventName = "updateEvent";
+        eventDto.setName(eventName);
+
+        // When & Then
+        this.mockMvc.perform(put("/api/events/{id}", event.getId())
+                .content(objectMapper.writeValueAsString(eventDto))
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaTypes.HAL_JSON)
+        )
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("_links.index.href").exists())
         ;
     }
 
     @Test
+    @DisplayName("입력값이 비어있는 경우에 이벤트 수정 실패")
+    void updateEvent400() throws Exception {
+        // Given
+        Event event = this.generateValidEvent(100);
+        EventDto eventDto = this.modelMapper.map(event, EventDto.class);
+
+        eventDto.setName("");
+
+        // When & Then
+        this.mockMvc.perform(put("/api/events/{id}", event.getId())
+                .content(objectMapper.writeValueAsString(eventDto))
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaTypes.HAL_JSON)
+        )
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("_links.index.href").exists())
+        ;
+    }
+    
+    @Test
     @DisplayName("없는 이벤트를 업데이트했을 때 404 응답 받기")
     void updateEvent404() throws Exception {
         Event event = generateValidEvent(3);
-        event.setId(100);
-        event.setName("updateEvent");
+        EventDto eventDto = modelMapper.map(event, EventDto.class);
 
         // When & Then
-        this.mockMvc.perform(patch("/api/events")
-                        .content(objectMapper.writeValueAsString(event))
+        this.mockMvc.perform(put("/api/events/{id}", 100)
+                        .content(objectMapper.writeValueAsString(eventDto))
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaTypes.HAL_JSON)
                 )
