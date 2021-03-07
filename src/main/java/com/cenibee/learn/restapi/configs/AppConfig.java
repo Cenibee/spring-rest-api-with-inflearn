@@ -3,6 +3,7 @@ package com.cenibee.learn.restapi.configs;
 import com.cenibee.learn.restapi.accounts.Account;
 import com.cenibee.learn.restapi.accounts.AccountRole;
 import com.cenibee.learn.restapi.accounts.AccountService;
+import com.cenibee.learn.restapi.common.AppProperties;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
@@ -33,12 +34,20 @@ public class AppConfig {
             @Autowired
             AccountService accountService;
 
+            @Autowired
+            AppProperties appProperties;
+
             @Override
             public void run(ApplicationArguments args) {
                 accountService.saveAccount(Account.builder()
-                        .email("ksj3452@email.com")
-                        .password("3452")
+                        .email(appProperties.getAdminUsername())
+                        .password(appProperties.getAdminPassword())
                         .roles(Set.of(AccountRole.ADMIN, AccountRole.USER))
+                        .build());
+                accountService.saveAccount(Account.builder()
+                        .email(appProperties.getUserUsername())
+                        .password(appProperties.getUserPassword())
+                        .roles(Set.of(AccountRole.USER))
                         .build());
             }
         };
