@@ -28,6 +28,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+// TODO 인가/비인가 에 따라 link 반환 테스트 추가
+
 @SpringBootTest
 public class EventControllerTests extends BaseControllerTest {
 
@@ -209,7 +211,7 @@ public class EventControllerTests extends BaseControllerTest {
     }
 
     @Test
-    @DisplayName("30 개의 이벤트를 10개씩 두번째 페이지 조회하기")
+    @DisplayName("30 개의 이벤트를 10개씩 두번째 페이지 조회하기증 - 비인증")
     void queryEvents() throws Exception {
         // Given
         IntStream.range(0, 30).forEach(this::generateValidEvent);
@@ -227,6 +229,33 @@ public class EventControllerTests extends BaseControllerTest {
                 .andExpect(jsonPath("_embedded.eventList[0]._links.self.href").exists())
                 .andExpect(jsonPath("_links.self.href").exists())
                 .andExpect(jsonPath("_links.profile.href").exists())
+                .andExpect(jsonPath("_links.create-event.href").doesNotExist())
+                // TODO 문서화 구현
+                .andDo(document("query-events"))
+        ;
+    }
+
+    @Test
+    @DisplayName("30 개의 이벤트를 10개씩 두번째 페이지 조회하기 - 인")
+    void queryEventsWithAuthentication() throws Exception {
+        // Given
+        IntStream.range(0, 30).forEach(this::generateValidEvent);
+
+        // When
+        this.mockMvc.perform(get("/api/events")
+                .header(HttpHeaders.AUTHORIZATION, getBearerToken())
+                .param("page", "1")
+                .param("size", "10")
+                .param("sort", "name,DESC")
+        )
+                // Then
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("page").exists())
+                .andExpect(jsonPath("_embedded.eventList[0]._links.self.href").exists())
+                .andExpect(jsonPath("_links.self.href").exists())
+                .andExpect(jsonPath("_links.profile.href").exists())
+                .andExpect(jsonPath("_links.create-event.href").exists())
                 // TODO 문서화 구현
                 .andDo(document("query-events"))
         ;

@@ -1,5 +1,7 @@
 package com.cenibee.learn.restapi.events;
 
+import com.cenibee.learn.restapi.accounts.Account;
+import com.cenibee.learn.restapi.accounts.CurrentUser;
 import com.cenibee.learn.restapi.common.ErrorDto;
 import com.cenibee.learn.restapi.index.Index.IndexController;
 import org.modelmapper.ModelMapper;
@@ -16,7 +18,6 @@ import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-
 import java.util.Optional;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
@@ -40,7 +41,9 @@ public class EventController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createEvent(@RequestBody @Valid EventDto eventDto, Errors errors) {
+    public ResponseEntity<?> createEvent(@RequestBody @Valid EventDto eventDto,
+                                         Errors errors,
+                                         @CurrentUser Account currentAccount) {
         if (errors.hasErrors()) {
             return errorResponseEntity(errors);
         }
@@ -52,6 +55,7 @@ public class EventController {
 
         Event event = modelMapper.map(eventDto, Event.class);
         event.update();
+        event.setManager(currentAccount);
         Event newEvent = this.eventRepository.save(event);
 
         return ResponseEntity
@@ -60,11 +64,14 @@ public class EventController {
     }
 
     @GetMapping
-    public ResponseEntity<?> queryEvents(Pageable pageable, PagedResourcesAssembler<Event> assembler) {
+    public ResponseEntity<?> queryEvents(Pageable pageable,
+                                         PagedResourcesAssembler<Event> assembler,
+                                         @CurrentUser Account currentAccount) {
         return ResponseEntity.ok(assembler
                 .toModel(this.eventRepository.findAll(pageable), this::eventModel)
                 // TODO 문서화한 URL 은 어떻게 테스트해야할까?
                 .add(Link.of("/docs/index.html#resources-events-list").withRel("profile"))
+                .addIf(currentAccount != null, () -> linkTo(EventController.class).withRel("create-event"))
         );
     }
 
