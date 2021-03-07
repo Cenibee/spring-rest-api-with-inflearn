@@ -1,6 +1,8 @@
 package com.cenibee.learn.restapi.events;
 
 import com.cenibee.learn.restapi.accounts.Account;
+import com.cenibee.learn.restapi.accounts.AccountSerializer;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.*;
 
 import javax.persistence.*;
@@ -32,6 +34,7 @@ public class Event {
     @Enumerated(EnumType.STRING)
     private EventStatus eventStatus;
     @ManyToOne
+    @JsonSerialize(using = AccountSerializer.class)
     private Account manager;
 
     public void update() {
