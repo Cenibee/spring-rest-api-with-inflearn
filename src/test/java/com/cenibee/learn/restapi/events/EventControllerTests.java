@@ -356,9 +356,26 @@ public class EventControllerTests extends BaseControllerTest {
                 .andExpect(jsonPath("id").exists())
                 .andExpect(jsonPath("_links.self").exists())
                 .andExpect(jsonPath("_links.profile").exists())
-                // TODO 문서화 구현
-                .andDo(document("update-an-event"))
-        ;
+                .andDo(document("update-an-event",
+                        requestFields(
+                                fieldWithPath("name").description("Name of the event"),
+                                fieldWithPath("description").description("description of the event"),
+                                fieldWithPath("beginEnrollmentDateTime").description("data time of begin of the event enroll"),
+                                fieldWithPath("closeEnrollmentDateTime").description("data time of close of the event enroll"),
+                                fieldWithPath("beginEventDateTime").description("data time of begin of the event"),
+                                fieldWithPath("endEventDateTime").description("data time of close of the event"),
+                                fieldWithPath("location").description("location of the event"),
+                                fieldWithPath("basePrice").description("base price of the event"),
+                                fieldWithPath("maxPrice").description("max price of the event"),
+                                fieldWithPath("limitOfEnrollment").description("limit of enrollment of the event")
+                        ),
+                        links(
+                                linkWithRel("self").description("link to self"),
+                                linkWithRel("update-event").description("link to update the event"),
+                                linkWithRel("query-events").description("link to query events"),
+                                linkWithRel("profile").description("link to profile")
+                        )
+                ));
     }
     
     @Test
