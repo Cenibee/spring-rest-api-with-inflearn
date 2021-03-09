@@ -220,13 +220,11 @@ public class EventControllerTests extends BaseControllerTest {
                 .andExpect(jsonPath("_links.self.href").exists())
                 .andExpect(jsonPath("_links.profile.href").exists())
                 .andExpect(jsonPath("_links.create-event.href").doesNotExist())
-                // TODO 문서화 구현
-                .andDo(document("query-events"))
         ;
     }
 
     @Test
-    @DisplayName("30 개의 이벤트를 10개씩 두번째 페이지 조회하기 - 인")
+    @DisplayName("30 개의 이벤트를 10개씩 두번째 페이지 조회하기 - 인증")
     void queryEventsWithAuthentication() throws Exception {
         // Given
         IntStream.range(0, 30).forEach(this::generateValidEvent);
@@ -235,7 +233,7 @@ public class EventControllerTests extends BaseControllerTest {
         this.mockMvc.perform(get("/api/events")
                 .header(HttpHeaders.AUTHORIZATION, getBearerToken())
                 .param("page", "1")
-                .param("size", "10")
+                .param("size", "2")
                 .param("sort", "name,DESC")
         )
                 // Then
@@ -246,9 +244,22 @@ public class EventControllerTests extends BaseControllerTest {
                 .andExpect(jsonPath("_links.self.href").exists())
                 .andExpect(jsonPath("_links.profile.href").exists())
                 .andExpect(jsonPath("_links.create-event.href").exists())
-                // TODO 문서화 구현
-                .andDo(document("query-events"))
-        ;
+                .andDo(document("get-events",
+                        links(
+                                linkWithRel("self").description("a self link"),
+                                linkWithRel("profile").description("a link to the next page"),
+                                linkWithRel("first").description("a link to the first page"),
+                                linkWithRel("prev").description("a link to the prev page"),
+                                linkWithRel("next").description("a link to the next page"),
+                                linkWithRel("last").description("a link to the last page"),
+                                linkWithRel("create-event").description("a link for create new event")
+                        ),
+                        responseFields(
+                                subsectionWithPath("_embedded.eventList[]").description("a list of events"),
+                                subsectionWithPath("_links").description("relational links"),
+                                subsectionWithPath("page").description("paged info")
+                        )
+                ));
     }
 
     @Test
