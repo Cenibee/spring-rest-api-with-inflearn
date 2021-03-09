@@ -269,15 +269,42 @@ public class EventControllerTests extends BaseControllerTest {
         Event event = this.generateValidEvent(100);
 
         // When
-        this.mockMvc.perform(get("/api/events/{id}", event.getId()))
+        this.mockMvc.perform(get("/api/events/{id}", event.getId())
+                .header(HttpHeaders.AUTHORIZATION, getBearerToken())
+        )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("name").exists())
                 .andExpect(jsonPath("id").exists())
                 .andExpect(jsonPath("_links.self").exists())
+                .andExpect(jsonPath("_links.update-event").exists())
+                .andExpect(jsonPath("_links.query-events").exists())
                 .andExpect(jsonPath("_links.profile").exists())
-                // TODO 문서화 구현
-                .andDo(document("get-an-event"))
-        ;
+                .andDo(document("get-an-event",
+                        links(
+                                linkWithRel("self").description("link to self"),
+                                linkWithRel("update-event").description("link to update the event"),
+                                linkWithRel("query-events").description("link to query events"),
+                                linkWithRel("profile").description("link to profile")
+                        ),
+                        responseFields(
+                                fieldWithPath("id").description("identifier of new event"),
+                                fieldWithPath("name").description("Name of new event"),
+                                fieldWithPath("description").description("description of new event"),
+                                fieldWithPath("beginEnrollmentDateTime").description("data time of begin of new event enroll"),
+                                fieldWithPath("closeEnrollmentDateTime").description("data time of close of new event enroll"),
+                                fieldWithPath("beginEventDateTime").description("data time of begin of new event"),
+                                fieldWithPath("endEventDateTime").description("data time of close of new event"),
+                                fieldWithPath("location").description("location of new event"),
+                                fieldWithPath("basePrice").description("base price of new event"),
+                                fieldWithPath("maxPrice").description("max price of new event"),
+                                fieldWithPath("limitOfEnrollment").description("limit of enrollment of new event"),
+                                fieldWithPath("free").description("it tells if this event is free or not"),
+                                fieldWithPath("offline").description("it tells if this event is offline or not"),
+                                fieldWithPath("eventStatus").description("event status"),
+                                subsectionWithPath("manager").description("manager info"),
+                                subsectionWithPath("_links").description("relational links")
+                        )
+                ));
     }
 
     @Test
