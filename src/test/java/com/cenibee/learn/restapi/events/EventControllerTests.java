@@ -143,34 +143,6 @@ public class EventControllerTests extends BaseControllerTest {
     }
 
     @Test
-    @DisplayName("입력 받을 수 없는 값을 사용한 경우에 에러가 발생하는 테스트")
-    void createEvent_Bad() throws Exception {
-        Event event = Event.builder()
-                .id(100)
-                .name("Spring")
-                .description("REST API Development")
-                .beginEnrollmentDateTime(LocalDateTime.of(2021, 2, 22, 21, 11))
-                .closeEnrollmentDateTime(LocalDateTime.of(2021, 2, 23, 21, 11))
-                .beginEventDateTime(LocalDateTime.of(2021, 2, 23, 21, 11))
-                .basePrice(100)
-                .maxPrice(200)
-                .limitOfEnrollment(100)
-                .location("강남역 스타텁 팩토리")
-                .free(true)
-                .offline(false)
-                .eventStatus(EventStatus.PUBLISHED)
-                .build();
-
-        mockMvc.perform(post("/api/events")
-                .header(HttpHeaders.AUTHORIZATION, getBearerToken())
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaTypes.HAL_JSON)
-                .content(objectMapper.writeValueAsString(event)))
-                .andDo(print())
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
     @DisplayName("입력 값이 비어있는 경우에 에러가 발생하는 테스트")
     void create_Bad_Request_Empty_Input() throws Exception {
         EventDto eventDto = EventDto.builder().build();
@@ -179,7 +151,10 @@ public class EventControllerTests extends BaseControllerTest {
                     .header(HttpHeaders.AUTHORIZATION, getBearerToken())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(this.objectMapper.writeValueAsString(eventDto)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("_embedded.errorDtoList").exists())
+                .andExpect(jsonPath("_links.index.href").exists())
+                .andExpect(jsonPath("_links.profile.href").exists());
     }
 
     @Test
@@ -207,7 +182,22 @@ public class EventControllerTests extends BaseControllerTest {
                 .andExpect(jsonPath("_embedded.errorDtoList[0].objectName").exists())
                 .andExpect(jsonPath("_embedded.errorDtoList[0].defaultMessage").exists())
                 .andExpect(jsonPath("_embedded.errorDtoList[0].code").exists())
-                .andExpect(jsonPath("_links.index").exists());
+                .andExpect(jsonPath("_links.index").exists())
+                .andDo(document("errors",
+                        responseFields(
+                                subsectionWithPath("_embedded.errorDtoList[]").description("a list of errors"),
+                                fieldWithPath("_links.index.href").description("a link to index"),
+                                fieldWithPath("_links.profile.href").description("a link to errors profile")
+                        ),
+                        responseFields(
+                                beneathPath("_embedded.errorDtoList"),
+                                fieldWithPath("objectName").description("a name of invalid object"),
+                                fieldWithPath("code").description("a error code"),
+                                fieldWithPath("defaultMessage").description("default error message"),
+                                fieldWithPath("field").description("rejected field's name"),
+                                fieldWithPath("rejectedValue").description("rejected value")
+                        )
+                ));
     }
 
     @Test

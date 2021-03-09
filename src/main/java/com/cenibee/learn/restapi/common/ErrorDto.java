@@ -35,7 +35,7 @@ public class ErrorDto {
                     .defaultMessage(fieldError.getDefaultMessage())
                     .rejectedValue(fieldError.getRejectedValue() != null ?
                             fieldError.getRejectedValue().toString() :
-                            null)
+                            "")
                     .build())
         );
 

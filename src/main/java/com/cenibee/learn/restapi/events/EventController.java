@@ -45,12 +45,12 @@ public class EventController {
                                          Errors errors,
                                          @CurrentUser Account currentAccount) {
         if (errors.hasErrors()) {
-            return errorResponseEntity(errors);
+            return invalidEventResponse(errors);
         }
 
         eventValidator.validate(eventDto, errors);
         if (errors.hasErrors()) {
-            return errorResponseEntity(errors);
+            return invalidEventResponse(errors);
         }
 
         Event event = modelMapper.map(eventDto, Event.class);
@@ -97,13 +97,13 @@ public class EventController {
         }
 
         if (errors.hasErrors()) {
-            return errorResponseEntity(errors);
+            return invalidEventResponse(errors);
         }
 
         this.eventValidator.validate(eventDto, errors);
 
         if (errors.hasErrors()) {
-            return errorResponseEntity(errors);
+            return invalidEventResponse(errors);
         }
 
         Event existingEvent = optionalEvent.get();
@@ -114,10 +114,11 @@ public class EventController {
                 .add(Link.of("/docs/index.html#resources-events-update").withRel("profile")));
     }
 
-    private ResponseEntity<?> errorResponseEntity(Errors errors) {
+    private ResponseEntity<?> invalidEventResponse(Errors errors) {
         return ResponseEntity.badRequest().body(
                 CollectionModel.of(ErrorDto.collectionOf(errors),
-                        linkTo(methodOn(IndexController.class).index()).withRel("index")));
+                        linkTo(methodOn(IndexController.class).index()).withRel("index"),
+                        Link.of("/docs/index.html#overview-errors").withRel("profile")));
     }
 
     private EntityModel<? extends Event> eventModel(Event event) {

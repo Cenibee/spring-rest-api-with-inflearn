@@ -67,6 +67,10 @@
 
 include::{snippets}/errors/response-fields.adoc[]
 
+또한, 각 에러에 담긴 정보는 다음 구조를 따른다.
+
+include::{snippets}/errors/response-fields-beneath-_embedded.errorDtoList.adoc[]
+
 예를 들어, 잘못된 요청으로 이벤트를 만들려고 했을 때 다음과 같은 `400 Bad Request` 응답을 받는다.
 
 include::{snippets}/errors/http-response.adoc[]
