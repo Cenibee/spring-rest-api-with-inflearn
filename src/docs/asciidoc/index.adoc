@@ -67,6 +67,10 @@
 
 include::{snippets}/errors/response-fields.adoc[]
 
+또한, 각 에러에 담긴 정보는 다음 구조를 따른다.
+
+include::{snippets}/errors/response-fields-beneath-_embedded.errorDtoList.adoc[]
+
 예를 들어, 잘못된 요청으로 이벤트를 만들려고 했을 때 다음과 같은 `400 Bad Request` 응답을 받는다.
 
 include::{snippets}/errors/http-response.adoc[]
@@ -120,11 +124,11 @@ operation::create-event[snippets='curl-request']
 
 `Get` 요청을 사용해서 기존 이벤트 하나를 조회할 수 있다.
 
-operation::get-event[snippets='request-fields,curl-request,http-response,links']
+operation::get-an-event[snippets='response-fields,curl-request,http-response,links']
 
 [[resources-events-update]]
 === 이벤트 수정
 
 `PUT` 요청을 사용해서 기존 이벤트를 수정할 수 있다.
 
-operation::update-event[snippets='request-fields,curl-request,http-response,links']
+operation::update-an-event[snippets='request-fields,curl-request,http-response,links']
